@@ -25,7 +25,8 @@ class ApiPath {
 
   static String get homestays => endpoint("homestays");
   static String get states => endpoint("states");
-  static String searchHomestays (String keyword) => endpoint ("homestays?state=$state");
+  static String searchHomestays (String keyword) => endpoint ("homestays?search=$keyword");
+  static String filterByState (String state) => endpoint("homestays?state=$state"); 
   static String filterByStateAndDistrict (String state, String district) => endpoint ("homestays?state=$state&district=$district");
 
 }
