@@ -78,12 +78,6 @@ class _HomestayListScreenState extends State<HomestayListScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF2D0B55),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
         title: const Text(
           'Homestay2U Malaysia',
           style: TextStyle(

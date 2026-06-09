@@ -7,7 +7,7 @@ class ApiPath {
   static String get baseUrl {
 
     if(kIsWeb){
-      return "http://slum78.myddns.me/homestay2u/api";
+      return "https://corsproxy.io/?http://slum78.myddns.me/homestay2u/api";
 
     }
     switch (defaultTargetPlatform){
@@ -33,7 +33,8 @@ class ApiPath {
 
   static Future<List<Homestay>> getHomestays () async{
     final response = await http.get(Uri.parse(homestays));
-
+    print('Status: ${response.statusCode}');
+    print('Body: ${response.body}');
     if (response.statusCode == 200) {
 
       final Map<String, dynamic> jsonBody = jsonDecode(response.body);
