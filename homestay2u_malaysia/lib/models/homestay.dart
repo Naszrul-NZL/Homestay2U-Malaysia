@@ -27,8 +27,8 @@ class Homestay {
     state: json['state'], 
     district: json['district'], 
     description: json['description'], 
-    priceMin: json['priceMin'], 
-    imageUrl:json['imageUrl']
+    priceMin: json['price_min'], 
+    imageUrl:json['image_url']
     );
 
   }
