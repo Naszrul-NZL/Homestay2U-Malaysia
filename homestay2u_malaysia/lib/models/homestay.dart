@@ -1,3 +1,5 @@
+import 'dart:ffi';
+import 'dart:nativewrappers/_internal/vm/lib/internal_patch.dart';
 
 class Homestay {
 
@@ -22,13 +24,13 @@ class Homestay {
   });
 
   factory Homestay.fromJson(Map<String, dynamic>json){
-    return Homestay(id: json['id'], 
-    name: json['name'], 
-    state: json['state'], 
-    district: json['district'], 
-    description: json['description'], 
-    priceMin: json['price_min'], 
-    imageUrl:json['image_url']
+    return Homestay(id: json['id']??0, 
+    name: json['name']??'', 
+    state: json['state']??'', 
+    district: json['district']??'', 
+    description: json['description']??'', 
+    priceMin: (json['price_min']??0).toInt(), 
+    imageUrl:json['image_url']??''
     );
 
   }

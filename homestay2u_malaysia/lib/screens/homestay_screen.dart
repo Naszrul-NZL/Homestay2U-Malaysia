@@ -15,11 +15,44 @@ class _HomestayListScreenState extends State<HomestayListScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
 
+  final List<String> _states = [
+  'All',
+  'Johor', 'Kedah', 'Kelantan', 'Melaka', 'Negeri Sembilan',
+  'Pahang', 'Perak', 'Perlis', 'Pulau Pinang', 'Sabah',
+  'Sarawak', 'Selangor', 'Terengganu', 'WP Kuala Lumpur',
+  'WP Labuan', 'WP Putrajaya'
+];
+
+  String _selectedState = 'All';
+
   @override
   void initState() {
     super.initState();
     _loadHomestays();
   }
+
+  Future<void> _filterByState(String state) async {
+  setState(() {
+    _isLoading = true;
+    _errorMessage = '';
+    _selectedState = state;
+  });
+
+  try {
+    final data = state == 'All'
+        ? await ApiPath.getHomestays()
+        : await ApiPath.getHomestaysByState(state);
+    setState(() {
+      _homestays = data;
+      _isLoading = false;
+    });
+  } catch (e) {
+    setState(() {
+      _errorMessage = 'Failed to load homestays.';
+      _isLoading = false;
+    });
+  }
+}
 
   Future<void> _loadHomestays() async {
     setState(() {
@@ -85,18 +118,31 @@ class _HomestayListScreenState extends State<HomestayListScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Column(
-            children: [
-              _buildSearchBar(),
-              Expanded(
-                child: _buildBody(),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Color(0xFFFFD700)),
+                onPressed: _loadHomestays,
               ),
             ],
-          ),
+      ),
+      body: Center(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            double width = constraints.maxWidth > 600
+                ? constraints.maxWidth * 0.5
+                : constraints.maxWidth;
+            return SizedBox(
+              width: width,
+              child: Column(
+                children: [
+                  _buildSearchBar(),
+                  Expanded(
+                    child: _buildBody(),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -104,23 +150,66 @@ class _HomestayListScreenState extends State<HomestayListScreen> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: TextField(
-        controller: _searchController,
-        onSubmitted: (value) => _searchHomestays(value),
-        decoration: InputDecoration(
-          hintText: 'Search homestay...',
-          prefixIcon: const Icon(Icons.search, color: Color(0xFF2D0B55)),
-          filled: true,
-          fillColor: Colors.grey[100],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 4,
+            child: DropdownButtonFormField<String>(
+              value: _selectedState,
+              isExpanded: true,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              items: _states.map((state) {
+                return DropdownMenuItem<String>(
+                  value: state,
+                  child: Text(
+                    state,
+                    style: const TextStyle(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) _filterByState(value);
+              },
+            ),
           ),
-        ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 6,
+            child: TextField(
+              controller: _searchController,
+              onSubmitted: (value) => _searchHomestays(value),
+              onChanged: (value) {
+                if (value.isEmpty) {
+                  _loadHomestays();
+                }
+              },
+              decoration: InputDecoration(
+                hintText: 'Search homestay...',
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF2D0B55)),
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
+
 
   Widget _buildBody() {
     if (_isLoading) {
@@ -168,82 +257,89 @@ class _HomestayListScreenState extends State<HomestayListScreen> {
       );
     }
 
-    return ListView.builder(
+    return RefreshIndicator(
+      color: const Color(0XFF2D0B55),
+      onRefresh: _loadHomestays, 
+      child: ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: _homestays.length,
       itemBuilder: (context, index) {
         return _buildCard(_homestays[index]);
       },
+      ),
     );
   }
 
   Widget _buildCard(Homestay homestay) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: const Color(0xFFFFD700),
+        width: 2,
+      ),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(10),
+            bottomLeft: Radius.circular(10),
           ),
-        ],
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Container(
-              width: 6,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFD700),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                ),
-              ),
+          child: Image.network(
+            homestay.imageUrl,
+            width: 130,
+            height: 160,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              width: 130,
+              height: 160,
+              color: Colors.grey[200],
+              child: const Icon(Icons.home, color: Colors.grey, size: 40),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      homestay.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Color(0xFF2D0B55),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '📍 ${homestay.state}, ${homestay.district}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '💰 RM ${homestay.priceMin} / night',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      homestay.description,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
-    );
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  homestay.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Color(0xFF2D0B55),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Location: ${homestay.state}, ${homestay.district}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Price: RM ${homestay.priceMin} / night',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  homestay.description,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
   }
 }

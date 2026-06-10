@@ -45,6 +45,18 @@ class ApiPath {
         }
     }
 
+    static Future<List<Homestay>> getHomestaysByState(String state) async {
+  final response = await http.get(Uri.parse(filterByState(state)));
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> jsonBody = jsonDecode(response.body);
+    final List<dynamic> data = jsonBody['data'];
+    return data.map((item) => Homestay.fromJson(item)).toList();
+  } else {
+    throw Exception('Failed to filter homestays');
+  }
+}
+
   static Future<List<Homestay>> fetchSearchHomestays(String keyword) async {
     final response =
         await http.get(Uri.parse(searchHomestays(keyword)));
